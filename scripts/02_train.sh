@@ -14,22 +14,4 @@ echo "Status: $STATUS"
 state_set TRAIN_JOB "$JOB"
 state_set SAMPLE "$SAMPLE"
 
-say "Downloading metrics"
-rm -rf results/azure_job && mkdir -p results/azure_job
-az ml job download -n "$JOB" --output-name metrics --download-path results/azure_job --only-show-errors
-for f in metrics.json sample_request.json sample_labels.json; do
-  cp "$(find results/azure_job -name "$f" | head -1)" "results/$f"
-done
-python3 -c "import json;m=json.load(open('results/metrics.json'));[print(k, {x:v['test'][x] for x in ('pr_auc','precision','recall','false_declines')}) for k,v in m['models'].items()]"
-
-if [ "$SAMPLE" = "1.0" ] || [ "$SAMPLE" = "1" ]; then
-  say "Registering the model in the Azure ML model registry"
-  VER=$(az ml model create -n "$MODEL_NAME" --type mlflow_model --path "azureml://jobs/$JOB/outputs/model" \
-        --description "XGBoost PaySim fraud model (no balance-error features), threshold chosen on validation" \
-        --query version -o tsv --only-show-errors)
-  state_set MODEL_VERSION "$VER"
-  echo "Registered $MODEL_NAME:$VER"
-  echo "Next:  bash scripts/03_deploy.sh"
-else
-  echo "Sample run only (not registered). For the real result run:  bash scripts/02_train.sh"
-fi
+bash "$(dirname "$0")/fetch_results.sh" "$JOB"

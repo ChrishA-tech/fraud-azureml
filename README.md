@@ -20,8 +20,20 @@ flowchart LR
 ## Results
 
 <!-- RESULTS:START -->
-Not run yet. `scripts/02_train.sh` and `scripts/03_deploy.sh` produce the numbers, and `scripts/update_readme.py`
-writes them here.
+Run on Azure ML (Azure for Students), pipeline job `strong_tail_zm5l4hwsvt`, model `fraud-xgb:2`.
+
+Data: 6,362,620 raw rows, 2,770,409 TRANSFER/CASH_OUT rows modelled; time split train / validation / test = 1,951,895 / 410,437 / 408,077 (4,010 fraud cases in the test period, 16 days never used for training or the threshold).
+
+| Model (held-out test period) | PR-AUC | ROC-AUC | Precision | Recall | False declines | Training time |
+|---|---|---|---|---|---|---|
+| XGBoost, all features | 0.9988 | 0.9990 | 0.997 | 0.999 | 14 | 7 s |
+| XGBoost, without balance-error artefact (model served by the endpoint) | 0.9931 | 0.9998 | 0.908 | 0.997 | 403 | 34 s |
+
+**Endpoint** (`Standard_DS2_v2`, managed online endpoint, MLflow model with no scoring script): 6/6 held-out test payments classified correctly (3 fraud, 3 genuine); latency over 50 requests of 6 rows: p50 107.9 ms, p95 120.9 ms (measured from the UK, including network). Deployment took about 19 minutes; the endpoint was deleted after testing.
+
+**Data-quality checks:** has_account_ids 0, amount_valid 0, known_type 0, label_binary 0, step_in_month 0, balances_non_negative 0 failing rows.
+
+PaySim is simulated: its balance fields reveal fraud almost perfectly, so treat these scores as an upper bound for real payments, not an estimate.
 <!-- RESULTS:END -->
 
 ## What each part shows

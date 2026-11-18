@@ -35,17 +35,42 @@ for p in Microsoft.MachineLearningServices Microsoft.Storage Microsoft.KeyVault;
   echo "  $p: $(az provider show -n "$p" --query registrationState -o tsv)"
 done
 
-say "Creating resource group $RG in $LOCATION"
-if ! az group create -n "$RG" -l "$LOCATION" --only-show-errors -o none; then
-  echo "Could not create the group in $LOCATION. Student subscriptions only allow some regions."
-  echo "Edit LOCATION in config.env (for example westeurope, northeurope, swedencentral, eastus) and re-run."
-  exit 1
+say "Finding the regions this subscription may deploy to"
+# Azure for Students limits deployments to a few regions through an 'allowed locations' policy.
+ALLOWED=$(az policy assignment list --query "[].parameters.listOfAllowedLocations.value[]" -o tsv 2>/dev/null | sort -u | tr '\n' ' ')
+echo "  Allowed by policy: ${ALLOWED:-(not readable; will try common regions)}"
+PREFER="$LOCATION uksouth ukwest northeurope westeurope swedencentral francecentral germanywestcentral norwayeast switzerlandnorth italynorth polandcentral spaincentral eastus eastus2 westus2 westus3 centralus southcentralus canadacentral australiaeast centralindia southeastasia japaneast koreacentral"
+CANDIDATES=""
+if [ -n "$ALLOWED" ]; then
+  for r in $PREFER; do case " $ALLOWED " in *" $r "*) case " $CANDIDATES " in *" $r "*) ;; *) CANDIDATES="$CANDIDATES $r";; esac;; esac; done
+  for r in $ALLOWED; do case " $CANDIDATES " in *" $r "*) ;; *) CANDIDATES="$CANDIDATES $r";; esac; done
+else
+  CANDIDATES="$PREFER"
 fi
 
-say "Creating Azure ML workspace $WS (about 2-4 minutes)"
-if ! az ml workspace show -n "$WS" -g "$RG" -o none 2>/dev/null; then
-  az ml workspace create -n "$WS" -g "$RG" -l "$LOCATION" --only-show-errors -o none
+say "Creating resource group $RG"
+az group show -n "$RG" -o none 2>/dev/null || az group create -n "$RG" -l "$(echo $CANDIDATES | cut -d' ' -f1)" --only-show-errors -o none
+
+if az ml workspace show -n "$WS" -g "$RG" -o none 2>/dev/null; then
+  LOCATION=$(az ml workspace show -n "$WS" -g "$RG" --query location -o tsv)
+  echo "Workspace $WS already exists in $LOCATION."
+else
+  OK=""
+  for r in $CANDIDATES; do
+    say "Creating Azure ML workspace $WS in $r (about 2-4 minutes)"
+    if az ml workspace create -n "$WS" -g "$RG" -l "$r" --only-show-errors -o none 2>/tmp/ws_err.txt; then
+      OK=yes; LOCATION="$r"; break
+    fi
+    if grep -q "RequestDisallowedByAzure" /tmp/ws_err.txt; then
+      echo "  $r is not allowed for this subscription; trying the next region."
+    else
+      cat /tmp/ws_err.txt; exit 1
+    fi
+  done
+  [ -n "$OK" ] || { echo "No allowed region worked. Paste this output to Claude."; exit 1; }
 fi
+state_set LOCATION "$LOCATION"
+echo "Workspace region: $LOCATION"
 az configure --defaults group="$RG" workspace="$WS" location="$LOCATION"
 
 say "Creating compute cluster $COMPUTE ($TRAIN_VM, 0-1 nodes, scales down after 5 idle minutes)"

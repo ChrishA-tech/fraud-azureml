@@ -98,7 +98,8 @@ def save_pyfunc(model, feats, thr, example, path: Path):
         artifacts={"xgb_model": str(tmp / "xgb.json"), "meta": str(tmp / "meta.json")},
         signature=sig, input_example=example,
         pip_requirements=[f"xgboost=={xgboost.__version__}", f"pandas=={pd.__version__}",
-                          f"numpy=={np.__version__}", f"mlflow=={mlflow.__version__}"])
+                          f"numpy=={np.__version__}", f"mlflow=={mlflow.__version__}",
+                          "azureml-ai-monitoring"])   # imported by Azure ML's no-code MLflow scoring script
 
 
 def main(argv=None):
@@ -127,7 +128,7 @@ def main(argv=None):
         train_s = time.perf_counter() - t0
         thr = choose_threshold(m.predict_proba(va[feats])[:, 1], va.is_fraud.to_numpy(), va.amount.to_numpy())
         res = evaluate(m.predict_proba(te[feats])[:, 1], te.is_fraud.to_numpy(), te.amount.to_numpy(), thr)
-        res.update({"train_seconds": round(train_s, 1), "best_iteration": int(getattr(m, "best_iteration", -1) or -1)})
+        res.update({"train_seconds": round(train_s, 1), "best_iteration": int(m.best_iteration) if getattr(m, "best_iteration", None) is not None else -1})
         results["models"][name] = {"features": feats, "test": res}
         mlflow.log_metrics({f"{name}_{k}": float(v) for k, v in res.items() if isinstance(v, (int, float))})
         kept[name] = (m, feats, thr)

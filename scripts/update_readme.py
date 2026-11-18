@@ -22,7 +22,7 @@ prep = m.get("prep", {})
 s, f = m["split_sizes"], m["fraud_by_split"]
 
 rows = []
-for name, label in (("full", "XGBoost, all features"), ("no_balance_errors", "XGBoost, without balance-error artefact (deployed)")):
+for name, label in (("full", "XGBoost, all features"), ("no_balance_errors", "XGBoost, without balance-error artefact (model served by the endpoint)")):
     t = m["models"][name]["test"]
     rows.append(f"| {label} | {t['pr_auc']:.4f} | {t['roc_auc']:.4f} | {t['precision']:.3f} | {t['recall']:.3f} | "
                 f"{t['false_declines']:,} | {t['train_seconds']:.0f} s |")

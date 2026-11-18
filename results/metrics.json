@@ -1,0 +1,97 @@
+{
+  "split_sizes": {
+    "train": 1951895,
+    "valid": 410437,
+    "test": 408077
+  },
+  "fraud_by_split": {
+    "train": 3643,
+    "valid": 560,
+    "test": 4010
+  },
+  "step_cutoffs": {
+    "train_max_step": 323,
+    "valid_max_step": 377
+  },
+  "test_days": 16,
+  "models": {
+    "full": {
+      "features": [
+        "amount",
+        "old_balance_orig",
+        "new_balance_orig",
+        "old_balance_dest",
+        "new_balance_dest",
+        "hour_of_day",
+        "is_transfer",
+        "dest_txn_count_24h",
+        "dest_amount_24h",
+        "amount_to_orig_balance",
+        "orig_emptied",
+        "error_balance_orig",
+        "error_balance_dest"
+      ],
+      "test": {
+        "n": 408077,
+        "fraud_cases": 4010,
+        "threshold": 0.5,
+        "pr_auc": 0.9988,
+        "roc_auc": 0.999,
+        "precision": 0.9965,
+        "recall": 0.9988,
+        "value_recall": 0.9956,
+        "fraud_value_caught": 6296153555.54,
+        "false_declines": 14,
+        "net_saving": 6296153415.54,
+        "train_seconds": 7.3,
+        "best_iteration": -1
+      }
+    },
+    "no_balance_errors": {
+      "features": [
+        "amount",
+        "old_balance_orig",
+        "new_balance_orig",
+        "old_balance_dest",
+        "new_balance_dest",
+        "hour_of_day",
+        "is_transfer",
+        "dest_txn_count_24h",
+        "dest_amount_24h",
+        "amount_to_orig_balance",
+        "orig_emptied"
+      ],
+      "test": {
+        "n": 408077,
+        "fraud_cases": 4010,
+        "threshold": 0.91,
+        "pr_auc": 0.9931,
+        "roc_auc": 0.9998,
+        "precision": 0.9085,
+        "recall": 0.9973,
+        "value_recall": 0.9999,
+        "fraud_value_caught": 6323408725.18,
+        "false_declines": 403,
+        "net_saving": 6323404695.18,
+        "train_seconds": 33.7,
+        "best_iteration": 197
+      }
+    }
+  },
+  "prep": {
+    "raw_rows": 6362620,
+    "sample_fraction": 1.0,
+    "full_file": true,
+    "rows_after_checks": 6362620,
+    "model_rows": 2770409,
+    "fraud_cases": 8213,
+    "expectation_failures": {
+      "has_account_ids": 0,
+      "amount_valid": 0,
+      "known_type": 0,
+      "label_binary": 0,
+      "step_in_month": 0,
+      "balances_non_negative": 0
+    }
+  }
+}
