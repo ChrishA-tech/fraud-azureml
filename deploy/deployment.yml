@@ -1,0 +1,6 @@
+$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.schema.json
+name: blue
+endpoint_name: fraud-xgb-endpoint
+model: azureml:fraud-xgb:1
+instance_type: Standard_DS2_v2
+instance_count: 1

@@ -1,0 +1,34 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+display_name: fraud-xgboost-training
+experiment_name: fraud-azureml
+description: PaySim fraud model on Azure ML - prep (data quality + features) then train (XGBoost + MLflow model).
+settings:
+  default_compute: azureml:cpu-cluster
+inputs:
+  raw_data:
+    type: uri_file
+    path: azureml:paysim-raw:1
+  sample_fraction: 1.0
+  n_estimators: 600
+outputs:
+  model:
+    type: mlflow_model
+  metrics:
+    type: uri_folder
+jobs:
+  prep:
+    type: command
+    component: ../components/prep.yml
+    inputs:
+      raw_data: ${{parent.inputs.raw_data}}
+      sample_fraction: ${{parent.inputs.sample_fraction}}
+  train:
+    type: command
+    component: ../components/train.yml
+    inputs:
+      features: ${{parent.jobs.prep.outputs.features}}
+      n_estimators: ${{parent.inputs.n_estimators}}
+    outputs:
+      model_output: ${{parent.outputs.model}}
+      metrics_output: ${{parent.outputs.metrics}}

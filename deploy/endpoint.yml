@@ -1,0 +1,4 @@
+$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineEndpoint.schema.json
+name: fraud-xgb-endpoint
+description: Real-time PaySim fraud scoring (XGBoost, MLflow model, no scoring script).
+auth_mode: key

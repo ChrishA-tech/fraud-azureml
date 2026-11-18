@@ -1,0 +1,23 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: fraud_train
+display_name: Train - XGBoost, threshold, held-out evaluation, MLflow model
+description: Time-based split, two XGBoost feature sets, cost-based threshold on validation, test-period metrics.
+type: command
+inputs:
+  features:
+    type: uri_folder
+  n_estimators:
+    type: integer
+    default: 600
+outputs:
+  model_output:
+    type: mlflow_model
+  metrics_output:
+    type: uri_folder
+code: ../src
+environment:
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
+  conda_file: ../environment/conda.yml
+command: >-
+  python train.py --features ${{inputs.features}} --n_estimators ${{inputs.n_estimators}}
+  --model_output ${{outputs.model_output}} --metrics_output ${{outputs.metrics_output}}

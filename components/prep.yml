@@ -1,0 +1,21 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: fraud_prep
+display_name: Prep - data-quality checks and features
+description: Raw PaySim CSV -> data-quality expectations -> 24-hour receiving-account features (Parquet).
+type: command
+inputs:
+  raw_data:
+    type: uri_file
+  sample_fraction:
+    type: number
+    default: 1.0
+outputs:
+  features:
+    type: uri_folder
+code: ../src
+environment:
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
+  conda_file: ../environment/conda.yml
+command: >-
+  python prep.py --raw_data ${{inputs.raw_data}} --sample_fraction ${{inputs.sample_fraction}}
+  --features ${{outputs.features}}

@@ -1,0 +1,8 @@
+.azure_state
+.azure_state.tmp
+results/azure_job/
+__pycache__/
+.pytest_cache/
+mlruns/
+*.pyc
+.DS_Store
